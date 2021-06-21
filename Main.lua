@@ -3,9 +3,16 @@
 -- Use this function to perform your initial setup
 function setup()
     
+    -- Setup variables
+    prevTouchState = ENDED
+    handleTouch = false
+    setChanged = false
+    setLabel = "Pitch class set theory analysis"
+    
     -- Setup drawing modes
     textMode(CENTER)
     ellipseMode(CENTER)
+    viewer.mode = FULLSCREEN
     
     -- Setup colours
     backgroundColour = color(45, 87, 141)
@@ -56,22 +63,65 @@ end
 
 -- This function gets called once every frame
 function draw()
+    -- Mouse handling
+    if (prevTouchState == BEGAN or prevTouchstate == CHANGED) and CurrentTouch.state == ENDED then
+        handleTouch = true
+    else
+        handleTouch = false
+    end
+    
+    prevTouchState = CurrentTouch.state
+    
     -- This sets a dark background color 
     background(backgroundColour)
-
+    
     -- This sets the line thickness
     strokeWidth(5)
-
+    
     -- Draw the main circle
     fill(backgroundColour)
     stroke(circleColour)
     ellipse(circleCentreX, circleCentreY, circleSize, circleSize)
-
+    
+    
+    -- Draw the lines
+    lastSelectedNote = nil
+    firstSelectedNote = nil
+    for k,v in pairs(notes) do
+        if v.selected then
+            -- Check to see if this is the first note
+            if firstSelectedNote == nil then
+                firstSelectedNote = v
+            end
+            
+            if lastSelectedNote ~= nil then
+                line(lastSelectedNote.x, lastSelectedNote.y, v.x, v.y)
+            end
+            
+            lastSelectedNote = v
+        end      
+    end
+    
+    -- Then do the final join
+    if lastSelectedNote ~= nil and firstSelectedNote ~= nil then
+        line(lastSelectedNote.x, lastSelectedNote.y, firstSelectedNote.x, firstSelectedNote.y) 
+    end
+    
     
     -- Draw the notes
     for k,v in pairs(notes) do
         v:draw()
     end
+    
+    -- Check if set has changed
+    if setChanged then
+        analyseSets()
+        setChanged = false
+    end
+    
+    textSize(50)
+    fill(textColour)
+    text(setLabel, WIDTH / 2, HEIGHT / 2)
     
 end
 
